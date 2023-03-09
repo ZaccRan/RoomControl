@@ -46,46 +46,49 @@ Adafruit_SSD1306 display(OLED_RESET);
 Button buttonB(A0),buttonR(A1);
 bool b,r;
 
-int x=0;         //
+int bb,rr,dd;
+int x=0;         // more delay creates more button "lag"
+
+void roomDark();         //list of functions
+void roomRed();
+void roomBlue();
 
 void setup() {
   Wire.begin();
   status=bmp.begin(0x76);
-  if(status==false){
-      Serial.printf("BMP280 at address 0x%02X failed to start\n", 0x76);
-    }
-
+  // if(status==false){
+  //     Serial.printf("BMP280 at address 0x%02X failed to start\n", 0x76);
+  //   }
   pix.begin();
   
   pinMode(W,INPUT);
-  pinMode(A0,INPUT);
+
   pinMode(D10,OUTPUT);   //Blue's
-  pinMode(A1,INPUT);
+
   pinMode(D9,OUTPUT);       //Red's
+
   pinMode(PIXPIN,OUTPUT);
 
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   display.clearDisplay();
   display.display();
 
-  Serial.begin(9600);
-  waitFor(Serial.isConnected,15000);
+  // Serial.begin(9600);
+  // waitFor(Serial.isConnected,15000);
 
-  // WiFi.on();
-  // WiFi.setCredentials("IoTNetwork");
+  WiFi.on();
+  WiFi.setCredentials("IoTNetwork");
 
-  // WiFi.connect();
+  WiFi.connect();
   // while(WiFi.connecting()) {
   //   Serial.printf(".");
   // }
   // Serial.printf("\n\n");
 }
 
-
-
 void loop() {
   display.setRotation(1);                //temp oled display
-  bmp.readTemperature();                 //using tempf to automatic control wemo1&2
+  bmp.readTemperature();                 //using tempf to automatically control wemo1&2 and 
   tempC=bmp.readTemperature();
   tempF=(tempC*1.8)+32;
   display.setTextSize(1);
@@ -94,81 +97,89 @@ void loop() {
   display.printf("%iC\n",tempC);
   display.printf("%iF\n",tempF);
   display.display();
-  Serial.printf("%iC\n",tempC);
-  Serial.printf("%iF\n",tempF);
+  // Serial.printf("%iC\n",tempC);
+  // Serial.printf("%iF\n",tempF);
   display.clearDisplay();
   if(water<=50){
       display.printf("Water\nNeeded");     //set by water sensor
     }
   display.display();
-  
   water=analogRead(W);
-  Serial.printf("%i\n\n",water);
+  // Serial.printf("%i\n\n",water);
   int blind;
   blind=map(water,0,955,255,0);  //little to no water, neopixel max brightness
   pix.setBrightness(blind);
   pix.setPixelColor(0,0x008000);
   pix.show();
 
-if(buttonB.isClicked()){
-    b=!b;
-  }
-if(b){
-    digitalWrite(D10,HIGH);
-    delay(x);
-    switchON(3);
-    setHue(1,true,HueBlue,255,255);
-    delay(x);
-    setHue(2,true,HueBlue,255,255);
-    delay(x);
-    setHue(3,true,HueBlue,255,255);
-    delay(x);
-    setHue(4,true,HueBlue,255,255);
-    delay(x);
-    setHue(5,true,HueBlue,255,255);
-    delay(x);
-    setHue(6,true,HueBlue,255,255);
-  }
-else{
+  if(buttonB.isClicked()){
+      b=!b;
+    }
+  if(b){
+      digitalWrite(D10,HIGH);
+      switchON(3);
+      roomBlue();
+    }
+  else{
+      digitalWrite(D10,LOW);
+      roomDark();
+      switchOFF(3);
+    }
+  if(buttonR.isClicked()){
+      r=!r;
+    }
+  if(r){
+      digitalWrite(D9,HIGH);
+      switchON(1);
+      roomRed();
+    }
+  else{
+      digitalWrite(D9,LOW);
+      roomDark();
+      switchOFF(1);
+    }
+  if(tempF=60){
     digitalWrite(D10,LOW);
-    setHue(1,false,0,0,0);
-    setHue(2,false,0,0,0);
-    setHue(3,false,0,0,0);
-    setHue(4,false,0,0,0);
-    setHue(5,false,0,0,0);
-    setHue(6,false,0,0,0);
-    switchOFF(2);
-  }
-if(buttonR.isClicked()){
-    r=!r;
-  }
-if(r){
-    digitalWrite(D9,HIGH);
-    delay(x);
-    switchON(1);
-    setHue(1,true,HueRed,255,255);
-    delay(x);
-    setHue(2,true,HueRed,255,255);
-    delay(x);
-    setHue(3,true,HueRed,255,255);
-    delay(x);
-    setHue(4,true,HueRed,255,255);
-    delay(x);
-    setHue(5,true,HueRed,255,255);
-    delay(x);
-    setHue(6,true,HueRed,255,255);
-  }
-else{
     digitalWrite(D9,LOW);
-    setHue(1,false,0,0,0);
-    setHue(2,false,0,0,0);
-    setHue(3,false,0,0,0);
-    setHue(4,false,0,0,0);
-    setHue(5,false,0,0,0);
-    setHue(6,false,0,0,0);
+    roomDark();
     switchOFF(1);
+    switchOFF(3);
+
   }
+  if((tempF>=65)&&(!r)){                 // automatic function
+      digitalWrite(D10,HIGH);
+      switchON(3);
+      roomBlue();
+    }
+  if((tempF<=75)&&(!b)){
+      digitalWrite(D9,HIGH);
+      switchON(1);
+      roomRed();
+    }
 }
+//Functions to clean code
+void roomDark() {
+  for(dd=1;dd=6;dd++){
+      setHue(dd,false,0,0,0);
+    }
+}
+void roomRed(){
+  for(rr=1;rr=6;rr++){
+      setHue(rr,true,HueRed,255,255);
+    }
+}
+void roomBlue(){
+  for(bb=1;bb=6;bb++){
+      setHue(bb,true,HueBlue,255,255);
+    }
+}
+
+// for(bb=1;bb=6;bb++){
+//   setHue(bb,true,HueBlue,255,255)
+// };
+// for(rr=1;rr=6;rr++){
+//   setHue(rr,true,HueRed,255,255)
+// };
 
 // example code
   // delay(x);
@@ -276,7 +287,6 @@ else{
 //   setHue(5,true,HueRed,255,255);
 //   delay(x);
 //   setHue(6,true,HueRed,255,255);
-
 // }
 // else{
 //   digitalWrite(D9,LOW);
@@ -288,7 +298,7 @@ else{
 //   setHue(6,false,0,0,0);
 //   switchOFF(1);
 // }
-//water sensor, neopixel, oled working
+//water sensor,bmp280,neopixel,oled working
   // display.setRotation(1);                //temp oled display
   // bmp.readTemperature();                 //using tempf to automatic control wemo1&2
   // tempC=bmp.readTemperature();
