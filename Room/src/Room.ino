@@ -129,13 +129,12 @@ void loop() {
       roomDark();
       switchOFF(1);
     }
-  if(tempF=70){
+  if(tempF==70){
     digitalWrite(D10,LOW);
     digitalWrite(D9,LOW);
     roomDark();
     switchOFF(1);
     switchOFF(3);
-
   }
   if((tempF>=65)&&(!r)){                 // automatic function
       digitalWrite(D10,HIGH);
@@ -150,17 +149,17 @@ void loop() {
 }
 //Functions to clean code
 void roomDark() {
-  for(dd=1;dd=6;dd++){
+  for(dd=1;dd<=6;dd++){
       setHue(dd,false,0,0,0);
     }
 }
 void roomRed(){
-  for(rr=1;rr=6;rr++){
+  for(rr=1;rr<=6;rr++){
       setHue(rr,true,HueRed,255,255);
     }
 }
 void roomBlue(){
-  for(bb=1;bb=6;bb++){
+  for(bb=1;bb<=6;bb++){
       setHue(bb,true,HueBlue,255,255);
     }
 }
